@@ -3,8 +3,17 @@
 import { useEffect } from "react";
 import { useMap } from "react-leaflet";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
+import type { LatLngExpression } from "leaflet";
 
-export default function SearchControl({ setMarkerPosition, updateAddress }) {
+interface SearchControlProps {
+  setMarkerPosition: (position: LatLngExpression) => void;
+  updateAddress: (lat: number, lon: number) => void;
+}
+
+export default function SearchControl({
+  setMarkerPosition,
+  updateAddress,
+}: SearchControlProps) {
   const map = useMap();
 
   useEffect(() => {
@@ -23,15 +32,23 @@ export default function SearchControl({ setMarkerPosition, updateAddress }) {
 
     map.addControl(searchControl);
 
-    map.on("geosearch/showlocation", (result: any) => {
-      const { x, y } = result.location;
-      setMarkerPosition([y, x]);
-      updateAddress(y, x);
-      map.flyTo([y, x], 18);
-    });
+    // Type-safe event listener
+    const handleSearch = (result: any) => {
+      if (result?.location) {
+        const { x, y } = result.location; // x = lon, y = lat
+        setMarkerPosition([y, x]);
+        updateAddress(y, x);
+        map.flyTo([y, x], 18);
+      }
+    };
 
-    return () => map.removeControl(searchControl);
-  }, [map]);
+    map.on("geosearch/showlocation", handleSearch);
+
+    return () => {
+      map.off("geosearch/showlocation", handleSearch);
+      map.removeControl(searchControl);
+    };
+  }, [map, setMarkerPosition, updateAddress]);
 
   return null;
 }
