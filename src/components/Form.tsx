@@ -1,8 +1,9 @@
 "use client";
-import { useState, ChangeEvent, FormEvent, useEffect } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect, } from "react";
 import { Box, MapPin, Clock, Plus, X } from "lucide-react";
 import dynamic from "next/dynamic";
-import type { LatLngExpression, LeafletMouseEvent } from "leaflet";
+import type { LatLngExpression } from "leaflet";
+import type { DragEndEvent } from "leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-geosearch/dist/geosearch.css";
@@ -26,7 +27,7 @@ const Popup = dynamic(
 );
 const SearchControl = dynamic(() => import("./SearchControl"), { ssr: false });
 
-// FIX: Use only mergeOptions. Do NOT delete prototype functions.
+// FIX: Use mergeOptions only
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -97,8 +98,10 @@ const Form = () => {
     );
   };
 
-  const handleMarkerDrag = (e: LeafletMouseEvent) => {
-    const { lat, lng } = e.target.getLatLng();
+  // FIXED: Correct dragend event type
+  const handleMarkerDrag = (e: DragEndEvent) => {
+    const marker = e.target;
+    const { lat, lng } = marker.getLatLng();
     setMarkerPosition([lat, lng]);
     updateAddress(lat, lng);
   };
