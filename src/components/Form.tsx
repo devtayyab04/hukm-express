@@ -1,14 +1,14 @@
 "use client";
-import { useState, ChangeEvent, FormEvent, useEffect, } from "react";
+
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { Box, MapPin, Clock, Plus, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import type { LatLngExpression } from "leaflet";
-import type { DragEndEvent } from "leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-geosearch/dist/geosearch.css";
 
-// Dynamic imports for react-leaflet components (SSR-safe)
+// Dynamic imports (SSR-safe)
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
   { ssr: false }
@@ -27,7 +27,7 @@ const Popup = dynamic(
 );
 const SearchControl = dynamic(() => import("./SearchControl"), { ssr: false });
 
-// FIX: Use mergeOptions only
+// Leaflet icon setup
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -62,16 +62,15 @@ const Form = () => {
     31.5204, 74.3587,
   ]);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  useEffect(() => setIsClient(true), []);
 
+  // Fetch address from lat/lon
   const updateAddress = async (lat: number, lon: number) => {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
       );
-      const data = await res.json();
+      const data: { display_name?: string } = await res.json();
       if (data?.display_name) {
         setFormData((prev) => ({ ...prev, address: data.display_name }));
       }
@@ -80,6 +79,7 @@ const Form = () => {
     }
   };
 
+  // Use current location
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported on your device.");
@@ -98,14 +98,15 @@ const Form = () => {
     );
   };
 
-  // FIXED: Correct dragend event type
-  const handleMarkerDrag = (e: DragEndEvent) => {
-    const marker = e.target;
+  // Marker drag event
+  const handleMarkerDrag = (e: any) => {
+    const marker = e.target as L.Marker;
     const { lat, lng } = marker.getLatLng();
     setMarkerPosition([lat, lng]);
     updateAddress(lat, lng);
   };
 
+  // Item management
   const handleItemChange = (id: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -132,21 +133,23 @@ const Form = () => {
     }
   };
 
+  // Address textarea change
   const handleAddressChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setFormData({ ...formData, address: e.target.value });
   };
 
+  // Delivery time
   const handleDeliveryTime = (time: "normal" | "express") => {
     setFormData({ ...formData, deliveryTime: time });
   };
 
+  // Form submission
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
     const nonEmptyItems = formData.items.filter(
       (item) => item.description.trim() !== ""
     );
-
     if (nonEmptyItems.length === 0) {
       alert("Please add at least one item.");
       return;
@@ -177,6 +180,7 @@ const Form = () => {
           Quick Order Form
         </h1>
 
+        {/* Items */}
         <div className="mt-6">
           <label className="block font-semibold text-gray-900 flex items-center gap-2 mb-3">
             <Box className="w-5 h-5" /> What do you need?
@@ -189,7 +193,9 @@ const Form = () => {
                   <div className="flex-1 relative">
                     <textarea
                       value={item.description}
-                      onChange={(e) => handleItemChange(item.id, e.target.value)}
+                      onChange={(e) =>
+                        handleItemChange(item.id, e.target.value)
+                      }
                       placeholder="Describe item..."
                       className="w-full py-2 px-3 pr-10 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 text-gray-900 resize-none"
                       rows={2}
@@ -221,6 +227,7 @@ const Form = () => {
           </div>
         </div>
 
+        {/* Address */}
         <div className="mt-4">
           <label className="block font-semibold text-gray-900 mb-2 flex items-center gap-2">
             <MapPin className="w-5 h-5" /> Delivery Address
@@ -258,12 +265,10 @@ const Form = () => {
                   setMarkerPosition={setMarkerPosition}
                   updateAddress={updateAddress}
                 />
-
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
                 <Marker
                   position={markerPosition}
-                  draggable={true}
+                  draggable
                   eventHandlers={{ dragend: handleMarkerDrag }}
                 >
                   <Popup>Drag me to your exact location</Popup>
@@ -273,6 +278,7 @@ const Form = () => {
           )}
         </div>
 
+        {/* Delivery Time */}
         <div className="mt-4">
           <label className="block font-semibold text-gray-900 mb-2 flex items-center gap-2">
             <Clock className="w-5 h-5" /> Delivery Time

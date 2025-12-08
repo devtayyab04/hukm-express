@@ -18,10 +18,12 @@ export default function SearchControl({
 
   useEffect(() => {
     const provider = new OpenStreetMapProvider({
-      params: { countrycodes: "PK" }, // LIMIT SEARCH TO PAKISTAN
+      params: { countrycodes: "PK" }, // Limit search to Pakistan
     });
 
-    const searchControl = new GeoSearchControl({
+    const GeoSearchControlAny = GeoSearchControl as any;
+
+    const searchControl = new GeoSearchControlAny({
       provider,
       style: "bar",
       autoClose: true,
@@ -32,7 +34,6 @@ export default function SearchControl({
 
     map.addControl(searchControl);
 
-    // Type-safe event listener
     const handleSearch = (result: any) => {
       if (result?.location) {
         const { x, y } = result.location; // x = lon, y = lat
