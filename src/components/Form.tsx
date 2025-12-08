@@ -26,8 +26,7 @@ const Popup = dynamic(
 );
 const SearchControl = dynamic(() => import("./SearchControl"), { ssr: false });
 
-// Fix default marker icons
-delete L.Icon.Default.prototype._getIconUrl;
+// FIX: Use only mergeOptions. Do NOT delete prototype functions.
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -59,8 +58,7 @@ const Form = () => {
   const [isClient, setIsClient] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [markerPosition, setMarkerPosition] = useState<LatLngExpression>([
-    31.5204,
-    74.3587,
+    31.5204, 74.3587,
   ]);
 
   useEffect(() => {
