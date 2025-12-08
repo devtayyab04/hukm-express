@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { Box, MapPin, Clock, Plus, X } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -62,22 +61,26 @@ const Form = () => {
     31.5204, 74.3587,
   ]);
 
-  useEffect(() => setIsClient(true), []);
+useEffect(() => {
+  setIsClient(true);
+}, []);
 
   // Fetch address from lat/lon
   const updateAddress = async (lat: number, lon: number) => {
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
-      );
-      const data: { display_name?: string } = await res.json();
-      if (data?.display_name) {
-        setFormData((prev) => ({ ...prev, address: data.display_name }));
-      }
-    } catch (err) {
-      console.error(err);
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+    );
+    const data: { display_name?: string } = await res.json();
+
+    if (data?.display_name) {
+      setFormData((prev) => ({ ...prev, address: data.display_name! }));
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   // Use current location
   const handleUseCurrentLocation = () => {
